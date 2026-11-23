@@ -192,6 +192,7 @@ class _MultiviewPageState extends ConsumerState<MultiviewPage> {
     androidCompatibility: settings.get(Settings.playerCompatMode),
     rtxVideoSuperResolution: settings.get(Settings.enableRtxVsr),
     volumeGainDb: settings.get(Settings.volumeBoostDb),
+    forceReopenOnResume: settings.get(Settings.forceReopenOnResume),
   );
 
   void _onControllerChanged() {
