@@ -611,6 +611,8 @@ class _RoomSwitchPanelState extends ConsumerState<RoomSwitchPanel> {
                       );
                     },
                     findChildIndexCallback: (key) => indices[key],
+                    // As in the rooms grid: no card asks to be kept alive.
+                    addAutomaticKeepAlives: false,
                     childCount: rooms.length,
                   ),
                 ),
@@ -644,6 +646,8 @@ class _RoomSwitchPanelState extends ConsumerState<RoomSwitchPanel> {
                   );
                 },
                 findChildIndexCallback: (key) => indices[key],
+                // No row asks to be kept alive either.
+                addAutomaticKeepAlives: false,
                 childCount: rooms.length,
               ),
             ),
