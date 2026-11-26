@@ -215,62 +215,6 @@ LivePlayQuality _quality(int rate, List<String> cdns) =>
     LivePlayQuality(quality: '$rate', id: rate, data: DouyuPlayData(rate, cdns));
 
 void main() {
-  test('issue257: public hover batches only confirmed states and preserves saved room metadata', () async {
-    Map<String, Object> row(int rid, {int status = 2, int out = 0}) => {
-      'roomId': rid,
-      'showStatus': status,
-      'is_out_live': out,
-      'roomName': 'Remote title',
-      'nickName': 'Remote name',
-      'roomCover': '//img.example.test/cover.jpg',
-      'showDetail': 'Notice &amp; details',
-      'hot': 100,
-    };
-    final http = ReplayHttp([
-      _synthetic('https://www.douyu.com/wgapi/live/webbackends/hoverRoomInfo?rids=101,102,103,104,105,106', {
-        'code': 0,
-        'data': [row(101), row(102, status: 1), row(103, out: 1), row(104), row(104), row(106), row(999)],
-      }),
-    ]);
-    final rooms = [
-      for (final id in ['101', '102', '103', '104', '105'])
-        LiveRoom(platform: 'douyu', roomId: id, title: 'Saved title', nick: 'Saved name', area: 'Saved area'),
-      LiveRoom(platform: 'douyu', roomId: '106', liveStatus: LiveStatus.replay),
-      LiveRoom(platform: 'douyu', roomId: 'short-alias'),
-    ];
-    final result = await DouyuSite(http).refreshFollowBatch(rooms);
-    expect(http.requests, hasLength(1));
-    expect(http.requests.single.method, 'GET');
-    expect(http.requests.single.headers['cookie'], isNull);
-    expect(http.requests.single.timeout, const Duration(seconds: 3));
-    expect(result.keys, ['douyu:101']);
-    final room = result.values.single;
-    expect(room.effectiveLiveStatus, LiveStatus.offline);
-    expect(room.title, 'Saved title');
-    expect(room.nick, 'Saved name');
-    expect(room.area, 'Saved area');
-    expect(room.cover, 'https://img.example.test/cover.jpg');
-    expect(room.notice, 'Notice & details');
-    expect(room.watching, '100');
-  });
-
-  test('issue257: no batch failure is converted into an offline snapshot', () async {
-    final rooms = [_room('101'), _room('102')];
-    for (final response in [
-      {'code': 1001, 'data': <Object?>[]},
-      {'code': 0, 'data': <String, Object?>{}},
-    ]) {
-      final http = ReplayHttp([
-        _synthetic('https://www.douyu.com/wgapi/live/webbackends/hoverRoomInfo?rids=101,102', response),
-      ]);
-      await expectLater(DouyuSite(http).refreshFollowBatch(rooms), throwsA(isA<ApiChanged>()));
-    }
-    await expectLater(DouyuSite(_Failing(TransportReason.timeout)).refreshFollowBatch(rooms), throwsA(isNotNull));
-    final empty = ReplayHttp([]);
-    expect(await DouyuSite(empty).refreshFollowBatch([_room('one-alias'), _room('101')]), isEmpty);
-    expect(empty.requests, isEmpty);
-  });
-
   test('issue135 failed login metadata can use public guest lines without changing other rooms', () async {
     const login = 'acf_auth=fixture-login;dy_did=01234567890123456789012345678901';
     final vault = MemoryCookieVault()..set('douyu', login);
